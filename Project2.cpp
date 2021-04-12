@@ -12,6 +12,8 @@
 #include <time.h>
 
 using namespace std;
+
+
 string strToBin(string s)
 {
 	string binary = "";
@@ -72,10 +74,68 @@ string strToBin(string s)
 	binaryString[binLength] = '\0';
 	return binaryString;
 }
+
+string saltString(string pass, string salt)
+{
+	int saltedLength = pass.length() + salt.length();
+	char saltString[saltedLength];
+	
+	//Copy password string
+	for(int i = 0; i < pass.length(); i++)
+	{
+		saltString[i] = pass[i];
+	}
+
+	//Add salt
+	int saltPosition = 0;
+	for(int j = pass.length(); j < saltedLength; j++)
+	{
+		saltString[j] = salt[saltPosition];
+		saltPosition++;
+	}
+
+	saltString[saltedLength] = '\0';
+	return saltString;
+}
+
+string padString(string s, int orgLength)
+{
+	int paddedLength, padding;
+
+	//Find length of padded binary string
+	if ( (orgLength % 512) == 0)
+	{
+		paddedLength = orgLength;
+	}
+	else
+	{
+		padding = 512 - (orgLength % 512);
+		paddedLength = orgLength + padding;
+	}
+
+	char pString[paddedLength];
+	//Copy original string
+	for (int i = 0; i < orgLength; i++)
+	{
+		pString[i] = s[i];
+	}
+	//Pad string
+	pString[orgLength] = '1';
+
+	for (int j = orgLength+1; j < paddedLength; j++)
+	{
+		pString[j] = '0';
+	}
+
+	pString[paddedLength] = '\0';
+	return pString;	
+}
 int main ()
 {
-	string password;
-	string binaryPassword;
+	int saltLength = 48;
+	char salt[saltLength];
+	string password, binaryPassword, saltedPassword, paddedPassword;
+	int padding, paddedLength;
 
 	cout << "Please enter your password.  Spaces are not allowed." << endl;
 	cin >> password;
@@ -84,5 +144,36 @@ int main ()
 	binaryPassword = strToBin(password);
 
 	cout << "Password in binary is:  " << binaryPassword << endl;
+
+	//Generate salt with random binary string
+	srand (time(NULL));
+	for (int i = 0; i < saltLength; i++)
+	{
+		int randGen = rand() % 2;
+		if (randGen == 1)
+		{
+			salt[i] = '1';
+		}
+		else
+		{
+			salt[i] = '0';
+		}
+	}
+	salt[saltLength] = '\0';
+
+	cout << "Salt generated:  " << salt << endl;
+
+	//Combine password with salt
+	saltedPassword = saltString(binaryPassword, salt);
+
+	cout << "Salted password:  " << saltedPassword << endl;
+	
+	//Pseudo-random number generator seeded with current time
+
+	paddedPassword = padString(saltedPassword, saltedPassword.length());
+	
+	//cout << "Original binary length:  " << binaryPassword.length() << endl;
+	//cout << "Padded binary length:  " << paddedLength << endl;
+	cout << "Padded password: " << paddedPassword << endl;
 	
 }
