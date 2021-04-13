@@ -127,23 +127,37 @@ string padString(string s, int orgLength)
 		pString[j] = '0';
 	}
 
-	//Add 64-bit representation of salted password to end
-	int orgPosition = 0;
-	for (int k = (paddedLength-64); k < paddedLength; k++)
+	//Add 64-bit representation of salted password length to end
+	//Convert salted password length to binary
+	int endValue = orgLength;
+	string sixFour = "";
+	while (endValue > 0)
 	{
-		if (orgPosition < orgLength)
+		if ( (endValue % 2) == 1)
 		{
-			pString[k] = s[orgPosition];
-			orgPosition++;
+			sixFour.push_back('1');
 		}
 		else
 		{
-			orgPosition = 0;
-			pString[k] = s[orgPosition];
-			orgPosition++;
+			sixFour.push_back('0');
 		}
+		endValue /= 2;
 	}
+	reverse(sixFour.begin(), sixFour.end());
+	//Add 0s to the beginning of the 64 digit binary value (the converted binary length will most likely not span 64 digits)
+	for (int k = (paddedLength-64); k < ( paddedLength - sixFour.length() ); k++)
+	{
+		pString[k] = '0';
+	}
+	//Fill in the rest with the converted binary value
+	int endPosition = 0;
+	for (int l = (paddedLength - sixFour.length() ); l < paddedLength; l++)
+	{
+		pString[l] = sixFour[endPosition];
+		endPosition++;
+	} 
 
+	cout << paddedLength << endl;
 	pString[paddedLength] = '\0';
 	return pString;	
 }
