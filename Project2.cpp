@@ -103,13 +103,13 @@ string padString(string s, int orgLength)
 	int paddedLength, padding;
 
 	//Find length of padded binary string
-	if ( (orgLength % 512) == 64)
+	if ( (orgLength % 512) == 0)
 	{
 		paddedLength = orgLength + 512;
 	}
 	else
 	{
-		padding = 448 - (orgLength % 512);
+		padding = 512 - (orgLength % 512);
 		paddedLength = orgLength + padding;
 	}
 
@@ -122,9 +122,26 @@ string padString(string s, int orgLength)
 	//Pad string
 	pString[orgLength] = '1';
 
-	for (int j = orgLength+1; j < paddedLength; j++)
+	for (int j = orgLength+1; j < (paddedLength-64); j++)
 	{
 		pString[j] = '0';
+	}
+
+	//Add 64-bit representation of salted password to end
+	int orgPosition = 0;
+	for (int k = (paddedLength-64); k < paddedLength; k++)
+	{
+		if (orgPosition < orgLength)
+		{
+			pString[k] = s[orgPosition];
+			orgPosition++;
+		}
+		else
+		{
+			orgPosition = 0;
+			pString[k] = s[orgPosition];
+			orgPosition++;
+		}
 	}
 
 	pString[paddedLength] = '\0';
