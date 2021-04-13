@@ -103,13 +103,13 @@ string padString(string s, int orgLength)
 	int paddedLength, padding;
 
 	//Find length of padded binary string
-	if ( (orgLength % 512) == 0)
+	if ( (orgLength % 512) == 64)
 	{
-		paddedLength = orgLength;
+		paddedLength = orgLength + 512;
 	}
 	else
 	{
-		padding = 512 - (orgLength % 512);
+		padding = 448 - (orgLength % 512);
 		paddedLength = orgLength + padding;
 	}
 
@@ -129,6 +129,18 @@ string padString(string s, int orgLength)
 
 	pString[paddedLength] = '\0';
 	return pString;	
+}
+string md5Hash(string pass)
+{
+	string A, B, C, D;
+	//A is hex 10:32:54:76
+	A = "00010000001100100101010001110110";
+	//B is hex FE:DC:89:AB
+	B = "11111110110111001000100110101011";
+	//C is hex 98:BA:EF:CD
+	C = "10011000101110101110111111001101";
+	//D is hex 67:65:23:01
+	D = "01100111011001010010001100000001";
 }
 int main ()
 {
