@@ -12,9 +12,18 @@
 #include <time.h>
 
 using namespace std;
+struct Node
+{
+	int id;
+	string saltCode;
+	string hashCode;
+	struct Node *next;
+};
 
+struct Node* first = NULL;
 
 string strToBin(string s)
+//Convert plaintext string to binary
 {
 	string binary = "";
 	int n = s.length();
@@ -76,6 +85,7 @@ string strToBin(string s)
 }
 
 string saltString(string pass, string salt)
+//Given binary password string, add salt
 {
 	int saltedLength = pass.length() + salt.length();
 	char saltString[saltedLength];
@@ -162,6 +172,7 @@ string padString(string s, int orgLength)
 	return pString;	
 }
 string md5Hash(string pass)
+//Placeholder function for hash function to be written.  Currently returns the exact same string
 {
 	string A, B, C, D;
 	//A is hex 10:32:54:76
@@ -172,51 +183,279 @@ string md5Hash(string pass)
 	C = "10011000101110101110111111001101";
 	//D is hex 67:65:23:01
 	D = "01100111011001010010001100000001";
+
+	//Return same string for now.  Change this to 128-bit hash code later when algorithm is written
+	return pass;
 }
+
+string toHex(string pass)
+//Converts a binary string to hexadecimal string.  Must input a string with length that is a multiple of 4, or this will not work correctly.
+{
+	int hexLength = pass.length() / 4;
+	char hexString[hexLength];
+
+	for (int i = 0; i < hexLength; i++)
+	{
+		char hexBin[4], hexChar;
+		int binPosition = 0, hexValue = 0;
+		//Get next 4 bits
+		for (int j = (4*i); j < (4 * (i+1) ); j++)
+		{
+			hexBin[binPosition] = pass[j];
+			binPosition++;
+		}
+		//Get int value of 4 bits
+		if (hexBin[0] == '1')
+		{
+			hexValue += 8;
+		}
+		if (hexBin[1] == '1')
+		{
+			hexValue += 4;
+		}
+		if (hexBin[2] == '1')
+		{
+			hexValue += 2;
+		}
+		if (hexBin[3] == '1')
+		{
+			hexValue += 1;
+		}
+		//Convert int value into hex
+		if (hexValue < 10)
+		{
+			hexChar = '0'+hexValue;
+		}
+		else if (hexValue = 10)
+		{
+			hexChar = 'a';
+		}
+		else if (hexValue = 11)
+		{
+			hexChar = 'b';
+		}
+		else if (hexValue = 12)
+		{
+			hexChar = 'c';
+		}
+		else if (hexValue = 13)
+		{
+			hexChar = 'd';
+		}
+		else if (hexValue = 14)
+		{
+			hexChar = 'e';
+		}
+		else
+		{
+			hexChar = 'f';
+		}
+		//Insert hexadecimal digit into hex string
+		hexString[i] = hexChar;
+	}
+	hexString[hexLength] = '\0';
+	return hexString;
+}
+void showMenu()
+{
+	cout << "1)  Create a new user and set up password" << endl;
+	cout << "2)  Log in with userID and password" << endl;
+	cout << "3)  Perform a Rainbow Table attack on a selected userID" << endl;
+	cout << "4)  Quit" << endl;
+}
+
 int main ()
 {
 	int saltLength = 48;
 	char salt[saltLength];
-	string password, binaryPassword, saltedPassword, paddedPassword;
-	int padding, paddedLength;
+	string password, binaryPassword, saltedPassword, paddedPassword, binHashCode, hexHashCode;
+	int padding, paddedLength, choice, userId;
+	bool done = false;
 
-	cout << "Please enter your password.  Spaces are not allowed." << endl;
-	cin >> password;
-	cout << "Password in plaintext is:  " << password << endl;
+	ifstream infile;
+	ofstream outfile;
 
-	binaryPassword = strToBin(password);
+	cout << "\nWelcome to the MD5 Password Simulator!" << endl;
+	showMenu();
+	cout << "Please enter a number to select your choice:  ";
+	cin >> choice;
 
-	cout << "Password in binary is:  " << binaryPassword << endl;
-
-	//Generate salt with random binary string
-	srand (time(NULL));
-	for (int i = 0; i < saltLength; i++)
+	while (choice != 4)
 	{
-		int randGen = rand() % 2;
-		if (randGen == 1)
+		if (choice == 1)
+		//Create new userID and password
 		{
-			salt[i] = '1';
+			int setupChoice;
+			cout << "Do you wish to load from a previous password file?" << endl;
+			cout << "1) Yes. Load from an existing password file." << endl;
+			cout << "2) No. Create a new password and overwrite any existing password file." << endl;
+			cout << "Please enter a number to select your choice:  ";
+			cin >> setupChoice;
+
+			if (setupChoice == 1)
+			//Loading from file not working yet
+			{
+				infile.open("password.txt");
+				if(!infile)
+				{
+					cout << "No password file found.  Creating new password file." << endl;
+					infile.close();
+				}
+				else
+				{
+					while ( !infile.eof() )
+					//Load id, salt, and hash from file
+					{
+						int i;
+						string s, h;
+						infile >> i;
+						infile >> s;
+						infile >> h;
+						Node *u = new Node;
+						u -> id = i;
+						u -> saltCode = s;
+						u -> hashCode = h;
+						u -> next = first;
+						first = u;
+					}
+					cout << "Password file loaded successfully!" << endl;
+				}
+			}
+			else if (setupChoice == 2)
+			{
+				cout << "Creating new password file..." << endl;
+			}
+			else
+			{
+				cout << "ERROR.  Invalid choice.  Returning to main menu..." << endl;
+				done = true;
+			}
+
+			outfile.open("password.txt");
+			while (!done)
+			{
+				cout << "Please enter an integer number for the new userID:  ";
+				cin >> userId;
+				cout << "Please enter the password for this user.  Spaces are not allowed." << endl;
+				cin >> password;
+				cout << "Password in plaintext is:  " << password << endl;
+
+				binaryPassword = strToBin(password);
+
+				cout << "Password in binary is:  " << binaryPassword << endl;
+
+				//Generate salt with random binary string
+				srand (time(NULL));
+				for (int i = 0; i < saltLength; i++)
+				{
+					int randGen = rand() % 2;
+					if (randGen == 1)
+					{
+						salt[i] = '1';
+					}
+					else
+					{
+						salt[i] = '0';
+					}
+				}
+				salt[saltLength] = '\0';
+				cout << "Salt generated:  " << salt << endl;
+
+				//Combine password with salt
+				saltedPassword = saltString(binaryPassword, salt);
+				cout << "Salted password:  " << saltedPassword << endl;
+				
+				//Pseudo-random number generator seeded with current time
+
+				paddedPassword = padString(saltedPassword, saltedPassword.length());
+				cout << "Padded password: " << paddedPassword << endl;
+
+				//Input padded password into hash algorithm
+
+				binHashCode = md5Hash(paddedPassword);
+				cout << "Hash code in binary:  " << binHashCode << endl;
+
+				//Convert binary hash code to hexidecimal
+				
+				hexHashCode = toHex(binHashCode);
+				cout << "Final hexidecimal hash code:  " << hexHashCode << endl;
+
+				Node *u = new Node;
+				u -> id = userId;
+				u -> saltCode = salt;
+				u -> hashCode = hexHashCode;
+				u -> next = first;
+				first = u;
+				cout << "User setup successful!" << endl;
+				
+				
+				//Prompt for another user setup
+				cout << "Set up another user?" << endl;
+				cout << "1) Yes" << endl;
+				cout << "2) No" << endl;
+				cout << "Please enter a number to select your choice:  ";
+				cin >> setupChoice;
+
+				if (setupChoice == 1)
+				{
+					done = false;
+				}
+				else if (setupChoice == 2)
+				{
+					Node *p = first;
+					while (p != NULL)
+					{
+						outfile << p -> id << " ";
+						outfile << p -> saltCode << " ";
+						outfile << p -> hashCode << endl;
+						outfile << endl;
+						p = p -> next;
+					}
+					cout << "Password file written successfully!" << endl;
+					done = true;
+				}
+				else
+				{
+					cout << "ERROR.  Invalid choice.  Returning to main menu..." << endl;
+					done = true;
+				}
+			}
+
+			//Main menu
+			outfile.close();
+			showMenu();
+			cout << "Please enter a number to select your choice:  ";
+			cin >> choice;
+		}
+		else if (choice == 2)
+		//Log in with userID and password
+		{
+			cout << "Logging in..." << endl;
+
+			//Main menu
+			showMenu();
+			cout << "Please enter a number to select your choice:  ";
+			cin >> choice;
+		}
+		else if (choice == 3)
+		//Perform Rainbow Table attack on selected userID
+		{
+			cout << "Performing rainbow table attack..." << endl;
+
+			//Main menu
+			showMenu();
+			cout << "Please enter a number to select your choice:  ";
+			cin >> choice;
 		}
 		else
 		{
-			salt[i] = '0';
+			cout << "ERROR. Invalid choice." << endl;
+			showMenu();
+			cout << "Please enter a number to select your choice:  ";
+			cin >> choice;
 		}
 	}
-	salt[saltLength] = '\0';
-
-	cout << "Salt generated:  " << salt << endl;
-
-	//Combine password with salt
-	saltedPassword = saltString(binaryPassword, salt);
-
-	cout << "Salted password:  " << saltedPassword << endl;
-	
-	//Pseudo-random number generator seeded with current time
-
-	paddedPassword = padString(saltedPassword, saltedPassword.length());
-	
-	//cout << "Original binary length:  " << binaryPassword.length() << endl;
-	//cout << "Padded binary length:  " << paddedLength << endl;
-	cout << "Padded password: " << paddedPassword << endl;
+	cout << "Exiting system..." << endl;
+	return 0;
 	
 }
