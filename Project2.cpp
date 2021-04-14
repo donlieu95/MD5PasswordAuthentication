@@ -431,6 +431,35 @@ int main ()
 		//Log in with userID and password
 		{
 			cout << "Logging in..." << endl;
+			//Load from existing password file?
+				//If yes, load file into linked list
+				//If no, use existing data in linked list
+
+			//Input userID
+			//Search linked list for userID
+			//If found:
+
+				//Input password
+				//Convert inputted password to binary
+				//Get salt value from linked list entry that matches userID
+				//Combine salt value with binary password string
+				//Run the resulting string through the padding function
+				//Run the resulting string through the MD5 hash function
+				//Run the resulting string through hex conversion
+				//Compare the resulting string with the hash code from the linked list entry that matches the userID
+				//If match:
+				
+					//"ACCESS GRANTED."
+
+				//If no match:
+
+					//"Incorrect password.  ACCESS DENIED."
+
+
+			//If not found:
+			
+				//"UserID does not exist in system.  ACCESS DENIED."
+				
 
 			//Main menu
 			showMenu();
@@ -441,6 +470,25 @@ int main ()
 		//Perform Rainbow Table attack on selected userID
 		{
 			cout << "Performing rainbow table attack..." << endl;
+			//Open outfile
+			//Input text file of all dictionary words
+			//Given length of generated salt value, find all possible salt values.  This will be 2^(saltLength+1) possible combinations.
+			//For every dictionary word:
+				//Output dictionary word to outfile with endline
+				//Convert dictionary word to binary string
+				//For every salt value:
+					//Combine converted binary string with salt value
+					//Run the result through padding function
+					//Run the result through MD5 hashing algorithm
+					//Run the result through hex conversion function
+					//Output result to outfile with endline
+
+			//This will populate an enormous rainbow table with 2^(saltLength+1) possible hashcode entries for every dictionary word
+			//Hashcodes in the password file can be tested against the rainbow table (select the hashcode corresponding to a user account, search for the hashcode in the rainbow table, and find matching entries.  The dictionary word(s) corresponding to match(es) can be tested using the Password Authentication option from choice 2.
+
+			//(If there exists an efficient way to store this rainbow table within the program itself, a function can be added to select a user's hash value and parse the rainbow table for matches.  This can output corresponding dictionary words for the attacker to try... However, this may be unnecessarily complicated.)
+					
+			
 
 			//Main menu
 			showMenu();
