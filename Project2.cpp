@@ -167,7 +167,7 @@ string padString(string s, int orgLength)
 		endPosition++;
 	} 
 
-	cout << paddedLength << endl;
+	//cout << paddedLength << endl;
 	pString[paddedLength] = '\0';
 	return pString;	
 }
@@ -266,7 +266,7 @@ void showMenu()
 
 int main ()
 {
-	int saltLength = 48;
+	int saltLength = 2;
 	char salt[saltLength];
 	string password, binaryPassword, saltedPassword, paddedPassword, binHashCode, hexHashCode;
 	int padding, paddedLength, choice, userId;
@@ -469,21 +469,74 @@ int main ()
 		else if (choice == 3)
 		//Perform Rainbow Table attack on selected userID
 		{
-			cout << "Performing rainbow table attack..." << endl;
+			cout << "Generating rainbow table..." << endl;
 			//Open outfile
+			outfile.open("rainbowTable.txt");
 			//Input text file of all dictionary words
-			//Given length of generated salt value, find all possible salt values.  This will be 2^(saltLength+1) possible combinations.
-			//For every dictionary word:
-				//Output dictionary word to outfile with endline
-				//Convert dictionary word to binary string
-				//For every salt value:
-					//Combine converted binary string with salt value
-					//Run the result through padding function
-					//Run the result through MD5 hashing algorithm
-					//Run the result through hex conversion function
-					//Output result to outfile with endline
+			infile.open("english3.txt");
+			//Given length of generated salt value, find all possible salt values.  This will be 2^(saltLength) possible combinations.
+			float maxSaltFloat = pow(2, (saltLength) );
+			int maxSalt = floor(maxSaltFloat);
 
-			//This will populate an enormous rainbow table with 2^(saltLength+1) possible hashcode entries for every dictionary word
+			//For every dictionary word:
+			while(!infile.eof())
+			{
+				//Output dictionary word to outfile with endline
+				infile >> password;
+				outfile << password << endl;
+				//Convert dictionary word to binary string
+				binaryPassword = strToBin(password);
+				//For every salt value:
+				for(int i = 0; i < maxSalt; i++)
+				{
+					string binSalt = "";
+					int saltValue = i;
+					while (saltValue > 0)
+					{
+						if ( (saltValue % 2) == 1)
+						{
+							binSalt.push_back('1');
+						}
+						else
+						{
+							binSalt.push_back('0');
+						}
+						saltValue /= 2;
+					}
+					reverse(binSalt.begin(), binSalt.end());
+					binSalt[binSalt.length()] = '\0';
+					int zeroBuffer = saltLength - binSalt.length();
+					for(int j = 0; j < zeroBuffer; j++)
+					{
+						salt[j] = '0';
+					}
+					int position = 0;
+					for(int k = zeroBuffer; k < saltLength; k++)
+					{
+						salt[k] = binSalt[position];
+						position++;
+					}
+					salt[saltLength] = '\0';
+					//Combine converted binary string with salt value
+					saltedPassword = saltString(binaryPassword, salt);
+					//Run the result through padding function
+					paddedPassword = padString(saltedPassword, saltedPassword.length());
+					//Run the result through MD5 hashing algorithm
+					binHashCode = md5Hash(paddedPassword);
+					//Run the result through hex conversion function
+					hexHashCode = toHex(binHashCode);
+					//Output result to outfile with endline
+					outfile << salt << " ";
+					outfile << hexHashCode << endl;
+					
+				}
+				outfile << endl;
+			}
+			infile.close();
+			outfile.close();
+			cout << "Rainbow Table generated successfully for salt length = " << saltLength << endl;
+
+			//This will populate an enormous rainbow table with 2^(saltLength) possible hashcode entries for every dictionary word
 			//Hashcodes in the password file can be tested against the rainbow table (select the hashcode corresponding to a user account, search for the hashcode in the rainbow table, and find matching entries.  The dictionary word(s) corresponding to match(es) can be tested using the Password Authentication option from choice 2.
 
 			//(If there exists an efficient way to store this rainbow table within the program itself, a function can be added to select a user's hash value and parse the rainbow table for matches.  This can output corresponding dictionary words for the attacker to try... However, this may be unnecessarily complicated.)
