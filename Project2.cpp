@@ -273,8 +273,6 @@ int main ()
 	string password, binaryPassword, saltedPassword, paddedPassword, binHashCode, hexHashCode, verPassword, filler;
 	int padding, paddedLength, choice, userId, verifyId;
 	bool done = false;
-	bool found = false;
-	bool match = true;
 
 	ifstream infile;
 	ofstream outfile;
@@ -436,6 +434,8 @@ int main ()
 		else if (choice == 2)
 		//Log in with userID and password
 		{
+			bool match = true;
+			bool found = false;
 			cout << "Enter the user ID you wish to verify: ";
 			cin >> verifyId;
 
