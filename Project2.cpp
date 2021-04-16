@@ -258,9 +258,11 @@ string toHex(string pass)
 }
 void showMenu()
 {
+	cout << endl;
+	cout << "MAIN MENU:" << endl;
 	cout << "1)  Create a new user and set up password" << endl;
 	cout << "2)  Log in with userID and password" << endl;
-	cout << "3)  Perform a Rainbow Table attack on a selected userID" << endl;
+	cout << "3)  Generate a Rainbow Table" << endl;
 	cout << "4)  Quit" << endl;
 }
 
@@ -268,14 +270,62 @@ int main ()
 {
 	int saltLength = 2;
 	char salt[saltLength];
-	string password, binaryPassword, saltedPassword, paddedPassword, binHashCode, hexHashCode;
-	int padding, paddedLength, choice, userId;
+	string password, binaryPassword, saltedPassword, paddedPassword, binHashCode, hexHashCode, verPassword, filler;
+	int padding, paddedLength, choice, userId, verifyId;
 	bool done = false;
+	bool found = false;
+	bool match = true;
 
 	ifstream infile;
 	ofstream outfile;
 
 	cout << "\nWelcome to the MD5 Password Simulator!" << endl;
+	
+	int setupChoice;
+	cout << "Do you wish to load from a previous password file?" << endl;
+	cout << "1) Yes. Load from an existing password file." << endl;
+	cout << "2) No. Create a new password and overwrite any existing password file." << endl;
+	cout << "Please enter a number to select your choice:  ";
+	cin >> setupChoice;
+
+	if (setupChoice == 1)
+	//Loading from file not working yet
+	{
+		infile.open("password.txt");
+		if(!infile)
+		{
+			cout << "No password file found.  Creating new password file." << endl;
+			infile.close();
+		}
+		else
+		{
+			while ( !infile.eof() )
+			//Load id, salt, and hash from file
+			{
+				int i;
+				string s, h;
+				infile >> i;
+				infile >> s;
+				infile >> h;
+				Node *u = new Node;
+				u -> id = i;
+				u -> saltCode = s;
+				u -> hashCode = h;
+				u -> next = first;
+				first = u;
+			}
+			cout << "Password file loaded successfully!" << endl;
+		}
+	}
+	else if (setupChoice == 2)
+	{
+		cout << "Initializing blank password file..." << endl;
+	}
+	else
+	{
+		cout << "ERROR.  Invalid choice.  Initializing blank password file..." << endl;
+		done = true;
+	}
 	showMenu();
 	cout << "Please enter a number to select your choice:  ";
 	cin >> choice;
@@ -285,51 +335,7 @@ int main ()
 		if (choice == 1)
 		//Create new userID and password
 		{
-			int setupChoice;
-			cout << "Do you wish to load from a previous password file?" << endl;
-			cout << "1) Yes. Load from an existing password file." << endl;
-			cout << "2) No. Create a new password and overwrite any existing password file." << endl;
-			cout << "Please enter a number to select your choice:  ";
-			cin >> setupChoice;
-
-			if (setupChoice == 1)
-			//Loading from file not working yet
-			{
-				infile.open("password.txt");
-				if(!infile)
-				{
-					cout << "No password file found.  Creating new password file." << endl;
-					infile.close();
-				}
-				else
-				{
-					while ( !infile.eof() )
-					//Load id, salt, and hash from file
-					{
-						int i;
-						string s, h;
-						infile >> i;
-						infile >> s;
-						infile >> h;
-						Node *u = new Node;
-						u -> id = i;
-						u -> saltCode = s;
-						u -> hashCode = h;
-						u -> next = first;
-						first = u;
-					}
-					cout << "Password file loaded successfully!" << endl;
-				}
-			}
-			else if (setupChoice == 2)
-			{
-				cout << "Creating new password file..." << endl;
-			}
-			else
-			{
-				cout << "ERROR.  Invalid choice.  Returning to main menu..." << endl;
-				done = true;
-			}
+			
 
 			outfile.open("password.txt");
 			while (!done)
@@ -430,35 +436,62 @@ int main ()
 		else if (choice == 2)
 		//Log in with userID and password
 		{
-			cout << "Logging in..." << endl;
-			//Load from existing password file?
-				//If yes, load file into linked list
-				//If no, use existing data in linked list
+			cout << "Enter the user ID you wish to verify: ";
+			cin >> verifyId;
 
-			//Input userID
-			//Search linked list for userID
-			//If found:
-
-				//Input password
-				//Convert inputted password to binary
-				//Get salt value from linked list entry that matches userID
-				//Combine salt value with binary password string
-				//Run the resulting string through the padding function
-				//Run the resulting string through the MD5 hash function
-				//Run the resulting string through hex conversion
-				//Compare the resulting string with the hash code from the linked list entry that matches the userID
-				//If match:
-				
-					//"ACCESS GRANTED."
-
-				//If no match:
-
-					//"Incorrect password.  ACCESS DENIED."
-
-
-			//If not found:
+			Node *p = first;
+			while (p != NULL)
+			{
+				userId = p -> id;
+				if (verifyId == userId)
+				{
+					for (int i = 0; i < (p -> saltCode.length() ); i++)
+					{
+						
+						salt[i] = p -> saltCode[i];
+					}
+					salt[p -> hashCode.length()] = '\0';
+					for (int i = 0; i < (p -> hashCode.length() ); i++)
+					{
+						hexHashCode[i] = p -> hashCode[i];
+					}
+					hexHashCode[p -> hashCode.length()] = '\0';
+					found = true;
+					break;
+				}
+				// move past salt and hash if no match
+				else
+				{
+					p = p -> next;
+				}
+			}
 			
-				//"UserID does not exist in system.  ACCESS DENIED."
+			if(found)
+			{
+				cout << "Enter password for user " << verifyId << " to begin verification: ";
+				cin >> verPassword;
+				// run entered password though encryption to compare to hash digest
+				binaryPassword = strToBin(verPassword);
+				saltedPassword = saltString(binaryPassword, salt);
+				paddedPassword = padString(saltedPassword, saltedPassword.length());
+				binHashCode = md5Hash(paddedPassword);
+				verPassword = toHex(binHashCode);
+
+				for (int i = 0; i < verPassword.length(); i++)
+				{
+					if (hexHashCode[i] != verPassword[i])
+					{
+						match = false;
+						break;
+					}
+				}
+				if (match == true)
+					cout << "Password successfully verified.  ACCESS GRANTED." << endl;
+				else
+					cout << "Invalid password entered.  ACCESS DENIED." << endl;
+			}
+			else
+				cout << "No such user ID exists in our database." << endl;
 				
 
 			//Main menu
@@ -467,7 +500,7 @@ int main ()
 			cin >> choice;
 		}
 		else if (choice == 3)
-		//Perform Rainbow Table attack on selected userID
+		//Generate Rainbow Table
 		{
 			cout << "Generating rainbow table..." << endl;
 			//Open outfile
