@@ -268,7 +268,7 @@ void showMenu()
 
 int main ()
 {
-	int saltLength = 2;
+	int saltLength = 32;
 	char salt[saltLength];
 	string password, binaryPassword, saltedPassword, paddedPassword, binHashCode, hexHashCode, verPassword, filler;
 	int padding, paddedLength, choice, userId, verifyId;
@@ -470,6 +470,8 @@ int main ()
 			{
 				cout << "Enter password for user " << verifyId << " to begin verification: ";
 				cin >> verPassword;
+				cout << "Authenticating..." << endl;
+				cout << endl;
 				// run entered password though encryption to compare to hash digest
 				binaryPassword = strToBin(verPassword);
 				saltedPassword = saltString(binaryPassword, salt);
@@ -491,7 +493,7 @@ int main ()
 					cout << "Invalid password entered.  ACCESS DENIED." << endl;
 			}
 			else
-				cout << "No such user ID exists in our database." << endl;
+				cout << "Authentication failed.  No such user ID exists in our database." << endl;
 				
 
 			//Main menu
@@ -503,6 +505,7 @@ int main ()
 		//Generate Rainbow Table
 		{
 			cout << "Generating rainbow table..." << endl;
+			clock_t timeStart = clock(), timeEnd;
 			//Open outfile
 			outfile.open("rainbowTable.txt");
 			//Input text file of all dictionary words
@@ -567,7 +570,9 @@ int main ()
 			}
 			infile.close();
 			outfile.close();
-			cout << "Rainbow Table generated successfully for salt length = " << saltLength << endl;
+			timeEnd = clock();
+			int duration = timeEnd - timeStart;
+			cout << "Rainbow Table generated successfully for salt length = " << saltLength << " in " << duration << "clock ticks." << endl;
 
 			//This will populate an enormous rainbow table with 2^(saltLength) possible hashcode entries for every dictionary word
 			//Hashcodes in the password file can be tested against the rainbow table (select the hashcode corresponding to a user account, search for the hashcode in the rainbow table, and find matching entries.  The dictionary word(s) corresponding to match(es) can be tested using the Password Authentication option from choice 2.
