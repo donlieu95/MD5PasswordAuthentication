@@ -492,7 +492,9 @@ int main ()
 				binaryPassword = strToBin(verPassword);
 				saltedPassword = saltString(binaryPassword, salt);
 				paddedPassword = padString(saltedPassword, saltedPassword.length());
-				MD5 md5(paddedPassword);
+				MD5 md5;
+				md5.hashBlock(paddedPassword);
+				md5.genDigest();
 				verPassword = md5.getDigest();
 
 				for (int i = 0; i < verPassword.length(); i++)
@@ -577,7 +579,9 @@ int main ()
 					//Run the result through padding function
 					paddedPassword = padString(saltedPassword, saltedPassword.length());
 					//Run the result through MD5 hashing algorithm
-					MD5 md5(paddedPassword);
+					MD5 md5;
+					md5.hashBlock(paddedPassword);
+					md5.genDigest();
 					hexHashCode = md5.getDigest();
 					//Output result to outfile with endline
 
