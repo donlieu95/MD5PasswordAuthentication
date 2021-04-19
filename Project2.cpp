@@ -3,6 +3,7 @@
 #include <bits/stdc++.h>
 #include <fstream> 
 #include <string> 
+#include <vector>
 #include <cstring>  
 #include <cstdio>
 #include <iomanip>
@@ -10,6 +11,8 @@
 #include <cmath>
 #include <sys/time.h>
 #include <time.h>
+#include <chrono>
+#include "MD5.cpp"
 
 using namespace std;
 struct Node
@@ -271,7 +274,7 @@ int main ()
 	int saltLength = 32;
 	char salt[saltLength];
 	string password, binaryPassword, saltedPassword, paddedPassword, binHashCode, hexHashCode, verPassword, filler;
-	int padding, paddedLength, choice, userId, verifyId;
+	int padding, paddedLength, choice, userId, verifyId, duration;
 	bool done = false;
 
 	ifstream infile;
@@ -342,6 +345,12 @@ int main ()
 				cin >> userId;
 				cout << "Please enter the password for this user.  Spaces are not allowed." << endl;
 				cin >> password;
+				cout << "\nCreating user ID and password entry..." << endl;
+				cout << endl;
+
+				//Begin timer
+				std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
 				cout << "Password in plaintext is:  " << password << endl;
 
 				binaryPassword = strToBin(password);
@@ -375,13 +384,13 @@ int main ()
 				cout << "Padded password: " << paddedPassword << endl;
 
 				//Input padded password into hash algorithm
+				MD5 md5(paddedPassword);
+				hexHashCode = md5.getDigest();
 
-				binHashCode = md5Hash(paddedPassword);
-				cout << "Hash code in binary:  " << binHashCode << endl;
+				//End timer
+				std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+				duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 
-				//Convert binary hash code to hexidecimal
-				
-				hexHashCode = toHex(binHashCode);
 				cout << "Final hexidecimal hash code:  " << hexHashCode << endl;
 
 				Node *u = new Node;
@@ -391,6 +400,7 @@ int main ()
 				u -> next = first;
 				first = u;
 				cout << "User setup successful!" << endl;
+				cout << "Execution time: " << duration << " milliseconds." << endl;
 				
 				
 				//Prompt for another user setup
@@ -472,12 +482,16 @@ int main ()
 				cin >> verPassword;
 				cout << "Authenticating..." << endl;
 				cout << endl;
+
+				//Begin timer
+				std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
 				// run entered password though encryption to compare to hash digest
 				binaryPassword = strToBin(verPassword);
 				saltedPassword = saltString(binaryPassword, salt);
 				paddedPassword = padString(saltedPassword, saltedPassword.length());
-				binHashCode = md5Hash(paddedPassword);
-				verPassword = toHex(binHashCode);
+				MD5 md5(paddedPassword);
+				verPassword = md5.getDigest();
 
 				for (int i = 0; i < verPassword.length(); i++)
 				{
@@ -487,6 +501,9 @@ int main ()
 						break;
 					}
 				}
+				//End timer
+				std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+				duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 				if (match == true)
 					cout << "Password successfully verified.  ACCESS GRANTED." << endl;
 				else
@@ -495,7 +512,7 @@ int main ()
 			else
 				cout << "Authentication failed.  No such user ID exists in our database." << endl;
 				
-
+			cout << "Execution time: " << duration << " milliseconds." << endl; 
 			//Main menu
 			showMenu();
 			cout << "Please enter a number to select your choice:  ";
@@ -505,7 +522,7 @@ int main ()
 		//Generate Rainbow Table
 		{
 			cout << "Generating rainbow table..." << endl;
-			clock_t timeStart = clock(), timeEnd;
+			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			//Open outfile
 			outfile.open("rainbowTable.txt");
 			//Input text file of all dictionary words
@@ -558,10 +575,11 @@ int main ()
 					//Run the result through padding function
 					paddedPassword = padString(saltedPassword, saltedPassword.length());
 					//Run the result through MD5 hashing algorithm
-					binHashCode = md5Hash(paddedPassword);
-					//Run the result through hex conversion function
-					hexHashCode = toHex(binHashCode);
+					MD5 md5(paddedPassword);
+					hexHashCode = md5.getDigest();
 					//Output result to outfile with endline
+
+
 					outfile << salt << " ";
 					outfile << hexHashCode << endl;
 					
@@ -570,9 +588,9 @@ int main ()
 			}
 			infile.close();
 			outfile.close();
-			timeEnd = clock();
-			int duration = timeEnd - timeStart;
-			cout << "Rainbow Table generated successfully for salt length = " << saltLength << " in " << duration << "clock ticks." << endl;
+			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+			duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+			cout << "Rainbow Table generated successfully for salt length = " << saltLength << " in " << duration << " milliseconds." << endl;
 
 			//This will populate an enormous rainbow table with 2^(saltLength) possible hashcode entries for every dictionary word
 			//Hashcodes in the password file can be tested against the rainbow table (select the hashcode corresponding to a user account, search for the hashcode in the rainbow table, and find matching entries.  The dictionary word(s) corresponding to match(es) can be tested using the Password Authentication option from choice 2.
