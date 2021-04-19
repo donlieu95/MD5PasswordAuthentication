@@ -1,14 +1,26 @@
 #include "MD5.h"
 
-MD5::MD5(std::string message)
+MD5::MD5()
+{
+}
+
+void MD5::hashBlock(std::string message)
 {
     this->message = message;
-    a0 = 0x67452301;
-    b0 = 0xefcdab89;
-    c0 = 0x98badcfe;
-    d0 = 0x10325476;
-    MD5Hash();
+    for (int i = 0; i < 1000; i++)
+    {
+        MD5Hash();
+    }
 }
+
+void MD5::genDigest()
+{
+    digest.append(formatOutput(a0));
+    digest.append(formatOutput(b0));
+    digest.append(formatOutput(c0));
+    digest.append(formatOutput(d0));
+}
+
 
 std::string MD5::toBinary(std::uint32_t n)
 {
@@ -105,11 +117,6 @@ void MD5::MD5Hash()
     b0 = (b0 + B) & 0xFFFFFFFF;
     c0 = (c0 + C) & 0xFFFFFFFF;
     d0 = (d0 + D) & 0xFFFFFFFF;
-
-    digest.append(formatOutput(a0));
-    digest.append(formatOutput(b0));
-    digest.append(formatOutput(c0));
-    digest.append(formatOutput(d0));
 }
 
 std::string MD5::getDigest()

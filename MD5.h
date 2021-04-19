@@ -26,17 +26,20 @@ private:
         0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039, 0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
         0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1, 0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
     };
-    std::uint32_t a0;
-    std::uint32_t b0;
-    std::uint32_t c0;
-    std::uint32_t d0;
+    std::uint32_t a0 = 0x67452301;
+    std::uint32_t b0 = 0xefcdab89;
+    std::uint32_t c0 = 0x98badcfe;
+    std::uint32_t d0 = 0x10325476;
     std::string digest;
 public:
-    MD5(std::string);
+    MD5();
     std::string toBinary(std::uint32_t);
     std::uint32_t toInt(std::string);
     std::uint32_t leftRotate(std::uint32_t, std::uint32_t);
     std::string formatOutput(std::uint32_t);
     void MD5Hash();
+    void hashBlock(std::string);
+    void genDigest();
     std::string getDigest();
+
 };
