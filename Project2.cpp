@@ -384,7 +384,9 @@ int main ()
 				cout << "Padded password: " << paddedPassword << endl;
 
 				//Input padded password into hash algorithm
-				MD5 md5(paddedPassword);
+				MD5 md5;
+				md5.hashBlock(paddedPassword);
+				md5.genDigest();
 				hexHashCode = md5.getDigest();
 
 				//End timer
