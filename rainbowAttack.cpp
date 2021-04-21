@@ -22,19 +22,23 @@ int showMenu()
 	cout << "MAIN MENU:" << endl;
 	cout << "1)  Create a new user and set up password" << endl;
 	cout << "2)  Log in with userID and password" << endl;
-	cout << "3)  Generate a Rainbow Table" << endl;
-	cout << "4)  Quit" << endl;
+	cout << "3)  Generate a rainbow table" << endl;
+	cout << "4)  Attack userID using rainbow table" << endl;
+	cout << "5)  Quit" << endl;
 	int choice;
 	cin >> choice;
 	return choice;
 }
 
-void isEmpty(ifstream& in)
+void isEmpty()
 {
+    ifstream in;
     in.open("passwords.txt");
     if (in.peek() == std::ifstream::traits_type::eof())
-       cout << "warning: passwords.txt is empty" << endl;
-       cout << "please add users before beginning the attack" << endl;
+    {
+        cout << "warning: passwords.txt is empty" << endl;
+        cout << "please add users before beginning the attack" << endl;
+    }
     in.close();
 }
 
@@ -312,13 +316,14 @@ void verifyUser(int saltLength, MD5 md5)
         if (inputId == userId)
         {
             found = true;
+            cout << "User ID found" << endl;
             break;
         }
     }
 
     if (found == false)
     {
-        cout << "UserID does not exist" << endl;
+        cout << "User ID does not exist" << endl;
     }
 
     string inputPassword;
@@ -341,6 +346,64 @@ void verifyUser(int saltLength, MD5 md5)
         cout << "Password successfully verified.  ACCESS GRANTED." << endl;
     else
         cout << "Invalid password entered.  ACCESS DENIED." << endl;
+
+    int duration;
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+
+    cout << "Execution time: " << duration << " milliseconds." << endl;
+
+    in.close();
+}
+
+void verifyUser(MD5 md5, string rainbowUserId, string rainbowPassword, string rainbowSalt)
+{
+    ifstream in;
+    in.open("passwords.txt");
+
+    cout << "Attacking user ID: " << rainbowUserId << endl;
+
+    string line;
+    bool found = false;
+    string userId, userSalt, userHash;
+    while(getline(in, line))
+    {
+        stringstream lineStream(line);
+
+        lineStream >> userId;
+        lineStream >> userSalt;
+        lineStream >> userHash;
+
+        if (rainbowUserId.compare(userId) == 0)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    if (found == false)
+    {
+        cout << "UserID does not exist" << endl;
+    }
+
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+    int saltLength;
+    saltLength = rainbowSalt.length();
+    string formattedRainbowPassword;
+    formattedRainbowPassword = formatPassword(rainbowPassword, saltLength, userSalt, 0);
+
+    string rainbowHash;
+    rainbowHash = genHash(md5, formattedRainbowPassword);
+
+    bool correctPassword = false;
+    if (rainbowHash.compare(userHash) == 0)
+        correctPassword = true;
+
+    if (correctPassword == true)
+        cout << "Password successfully verified.  ATTACK SUCCESSFUL." << endl;
+    else
+        cout << "Invalid password entered.  ATTACK FAILED." << endl;
 
     int duration;
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -379,9 +442,6 @@ void generateRainbowTable(int saltLength, MD5 md5)
             salt = intToBinary(saltValue);
             //cout << salt << endl;
 
-            string leadingZero;
-            int numberOfLeadingZeros;
-            numberOfLeadingZeros = saltLength - salt.length();
             while (salt.length() < saltLength)
             {
                 salt.insert(0, "0");
@@ -403,18 +463,73 @@ void generateRainbowTable(int saltLength, MD5 md5)
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
     cout << "Rainbow Table generated successfully for salt length = " << saltLength << " in " << duration << " milliseconds." << endl;
 }
+/*
+void attackLoginSequence(string userId, string rainbowPassword, string rainbowSalt, MD5 md5)
+{
+    string formatRainbowPassword = formatPassword(rainbowPassword, rainbowSalt.length(), rainbowSalt, 0);
+    string rainbowGeneratedHash = genHash(md5, formatRainbowPassword);
+}
+*/
 
+
+
+void attackUserId(MD5 md5)
+{
+    ifstream userHashIn;
+    userHashIn.open("passwords.txt");
+    ifstream rainbowHashIn;
+    rainbowHashIn.open("rainbowTable.txt");
+
+    string userId;
+    cout << "User ID to attack: ";
+    cin >> userId;
+
+    string line, lineSegment, passwordsFileHash;
+    while (getline(userHashIn, line))
+    {
+        //lineSegment = line.substr(0, line.find(" "));
+        //cout << "lineSegment: " << lineSegment << endl;
+        if (line.find(userId, 0) != string::npos)
+        {
+            stringstream passwordsLineStream(line);
+            passwordsLineStream >> passwordsFileHash >>
+                passwordsFileHash >> passwordsFileHash;
+            cout << passwordsFileHash << endl;
+            break;
+        }
+    }
+
+    string rainbowFilePassword, rainbowFileSalt;
+    while(getline(rainbowHashIn, line))
+    {
+        if (line.find(passwordsFileHash, 0) != string::npos)
+        {
+            stringstream rainbowLineStream(line);
+            rainbowLineStream >> rainbowFilePassword >> rainbowFileSalt;
+            break;
+        }
+    }
+
+    userHashIn.close();
+    cout << "We believe the user's login information is:" << endl;
+    cout << "   ID: " << userId << endl;
+    cout << "   Salt: " << rainbowFileSalt << endl;
+    cout << "   Password: " << rainbowFilePassword << endl;
+    cout << "Launching login sequence using attack setup" << endl;
+    verifyUser(md5, userId, rainbowFilePassword, rainbowFileSalt);
+}
 
 int main()
 {
     MD5 md5;
-    const int SALTLENGTH = 32;
+    const int SALTLENGTH = 4; //32
     srand (time(NULL));
 
     int userChoice = 0;
     bool quit = false;
     while (!quit)
     {
+        isEmpty();
         userChoice = showMenu();
         switch(userChoice)
         {
@@ -428,6 +543,8 @@ int main()
                 generateRainbowTable(SALTLENGTH, md5);
                 break;
             case 4:
+                attackUserId(md5);
+            case 5:
                 quit = true;
                 break;
         }
