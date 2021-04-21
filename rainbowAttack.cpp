@@ -494,7 +494,6 @@ void attackUserId(MD5 md5)
             stringstream passwordsLineStream(line);
             passwordsLineStream >> passwordsFileHash >>
                 passwordsFileHash >> passwordsFileHash;
-            cout << passwordsFileHash << endl;
             break;
         }
     }
@@ -544,6 +543,7 @@ int main()
                 break;
             case 4:
                 attackUserId(md5);
+                break;
             case 5:
                 quit = true;
                 break;
